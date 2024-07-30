@@ -6,7 +6,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from logging.handlers import TimedRotatingFileHandler
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -57,6 +57,7 @@ logger = setup_logger()
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
 def proxy(path):
+    logger.debug(f"Processing URL: {request.url}")
     if SECRET_KEY in request.url:
         return "Access granted to your site through the proxy!"
 
