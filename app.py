@@ -56,6 +56,11 @@ logger = setup_logger()
 @app.route('/receive', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
 def proxy():
+    if 'your_secret_key_here' in request.url:
+        # Handle access to the site
+        return "Access granted to your site through the proxy!"
+
+    # Normal proxy functionality
     logger.info(f"Received {request.method} request")
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
