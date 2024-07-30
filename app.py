@@ -54,13 +54,17 @@ def setup_logger():
 
 logger = setup_logger()
 
-@app.route('/receive', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
-def proxy():
-    logger.info(f"Received {request.method} request")
+def proxy(path):
+    logger.debug(f"Processing URL: {request.url}")
+    if SECRET_KEY in request.url:
+        return "Access granted to your site through the proxy!"
+
+    logger.info(f"Received {request.method} request for {path}")
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
-    
+
     try:
         response = requests.request(
             method=request.method,
@@ -71,18 +75,18 @@ def proxy():
             allow_redirects=False,
             timeout=10
         )
-        
+
         logger.info(f"Forwarded {request.method} request to {DESTINATION_URL}")
         logger.info(f"Received response from {DESTINATION_URL} with status {response.status_code}")
         logger.debug(f"Response headers: {dict(response.headers)}")
         logger.debug(f"Response body: {response.text}")
-        
+
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
         headers = [(name, value) for (name, value) in response.raw.headers.items()
                    if name.lower() not in excluded_headers]
-        
+
         return Response(response.content, response.status_code, headers)
-    
+
     except requests.exceptions.Timeout:
         logger.error(f"Timeout occurred while requesting {DESTINATION_URL}")
         return jsonify({'error': 'Request to destination timed out'}), 504
@@ -92,7 +96,6 @@ def proxy():
     except requests.exceptions.RequestException as e:
         logger.error(f"Error occurred while requesting {DESTINATION_URL}: {str(e)}")
         return jsonify({'error': 'An error occurred processing your request'}), 500
-
 
 if __name__ == '__main__':
     logger.info("Starting proxy server")
