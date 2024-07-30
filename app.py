@@ -6,11 +6,11 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from logging.handlers import TimedRotatingFileHandler
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_cors import CORS  # For enabling CORS if needed
+from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-CORS(app)  # Enable CORS if required
+CORS(app)  # Initialize CORS
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
