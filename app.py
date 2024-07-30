@@ -6,16 +6,18 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from logging.handlers import TimedRotatingFileHandler
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_cors import CORS  # For enabling CORS if needed
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+CORS(app)  # Enable CORS if required
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Get configuration from environment variables
-DESTINATION_URL = os.environ.get('DESTINATION_URL', 'https://example.com/api')
+DESTINATION_URL = os.environ.get('DESTINATION_URL', 'https://api.cinex.pro/api/payment/checkout')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key_here')
 RATE_LIMIT = os.environ.get('RATE_LIMIT', '10 per minute')
 
@@ -27,7 +29,6 @@ limiter = Limiter(
 )
 limiter.logger = logger
 
-
 def setup_logger():
     log_dir = 'logs'
     if not os.path.exists(log_dir):
@@ -37,7 +38,7 @@ def setup_logger():
     logger.setLevel(logging.DEBUG)
 
     log_file = os.path.join(log_dir, 'proxy.log')
-    file_handler = TimedRotatingFileHandler(log_file, when="midnight", interval=1, backupCount=30)
+    file_handler = TimedRotatingFileHandler(log_file, when="midnight", interval=1, backupCount=7)
     file_handler.suffix = "%Y-%m-%d.log"
 
     console_handler = logging.StreamHandler()
@@ -53,18 +54,16 @@ def setup_logger():
 
 logger = setup_logger()
 
-@app.route('/receive', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
-def proxy():
-    if 'your_secret_key_here' in request.url:
-        # Handle access to the site
+def proxy(path):
+    if SECRET_KEY in request.url:
         return "Access granted to your site through the proxy!"
 
-    # Normal proxy functionality
-    logger.info(f"Received {request.method} request")
+    logger.info(f"Received {request.method} request for {path}")
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
-    
+
     try:
         response = requests.request(
             method=request.method,
@@ -75,18 +74,18 @@ def proxy():
             allow_redirects=False,
             timeout=10
         )
-        
+
         logger.info(f"Forwarded {request.method} request to {DESTINATION_URL}")
         logger.info(f"Received response from {DESTINATION_URL} with status {response.status_code}")
         logger.debug(f"Response headers: {dict(response.headers)}")
         logger.debug(f"Response body: {response.text}")
-        
+
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
         headers = [(name, value) for (name, value) in response.raw.headers.items()
                    if name.lower() not in excluded_headers]
-        
+
         return Response(response.content, response.status_code, headers)
-    
+
     except requests.exceptions.Timeout:
         logger.error(f"Timeout occurred while requesting {DESTINATION_URL}")
         return jsonify({'error': 'Request to destination timed out'}), 504
@@ -99,5 +98,5 @@ def proxy():
 
 if __name__ == '__main__':
     logger.info("Starting proxy server")
-    port = int(os.environ.get('PORT', 5002))
+    port = int(os.environ.get('PORT', 5001))
     app.run(debug=os.environ.get('DEBUG', 'False').lower() == 'true', host='0.0.0.0', port=port)
