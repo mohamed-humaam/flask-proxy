@@ -1,3 +1,5 @@
-Flask
-requests
-flask-limiter
+Flask==2.0.1
+requests==2.26.0
+Werkzeug==2.0.1
+Flask-Limiter==1.4
+Flask-CORS==3.0.10

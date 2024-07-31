@@ -6,7 +6,9 @@ services:
       - "80:5001"
     environment:
       DESTINATION_URL: https://api.cinex.pro/api/payment/checkout
-      SECRET_KEY: your_secret_key_here
+      SECRET_KEY: goruboe
       RATE_LIMIT: 10 per minute
       DEBUG: 'True'
       PORT: 5001
+    volumes:
+      - ./logs:/app/logs

@@ -10,7 +10,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-CORS(app)  # Initialize CORS
+CORS(app)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Get configuration from environment variables
 DESTINATION_URL = os.environ.get('DESTINATION_URL', 'https://api.cinex.pro/api/payment/checkout')
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key_here')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'goruboe')
 RATE_LIMIT = os.environ.get('RATE_LIMIT', '10 per minute')
 
 # Set up rate limiter
@@ -54,21 +54,25 @@ def setup_logger():
 
 logger = setup_logger()
 
+@app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
 def proxy(path):
-    logger.debug(f"Processing URL: {request.url}")
-    if SECRET_KEY in request.url:
-        return "Access granted to your site through the proxy!"
-
-    logger.info(f"Received {request.method} request for {path}")
+    logger.info(f"Received request: {request.method} {request.url}")
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
 
+    if SECRET_KEY in request.url:
+        logger.info(f"Access granted with secret key: {request.url}")
+        return "Access granted to your site through the proxy!"
+
     try:
+        target_url = f"{DESTINATION_URL}/{path}"
+        logger.info(f"Forwarding request to: {target_url}")
+
         response = requests.request(
             method=request.method,
-            url=DESTINATION_URL,
+            url=target_url,
             headers={key: value for (key, value) in request.headers if key != 'Host'},
             data=request.get_data(),
             cookies=request.cookies,
@@ -76,8 +80,7 @@ def proxy(path):
             timeout=10
         )
 
-        logger.info(f"Forwarded {request.method} request to {DESTINATION_URL}")
-        logger.info(f"Received response from {DESTINATION_URL} with status {response.status_code}")
+        logger.info(f"Received response from {target_url} with status {response.status_code}")
         logger.debug(f"Response headers: {dict(response.headers)}")
         logger.debug(f"Response body: {response.text}")
 
@@ -88,13 +91,13 @@ def proxy(path):
         return Response(response.content, response.status_code, headers)
 
     except requests.exceptions.Timeout:
-        logger.error(f"Timeout occurred while requesting {DESTINATION_URL}")
+        logger.error(f"Timeout occurred while requesting {target_url}")
         return jsonify({'error': 'Request to destination timed out'}), 504
     except requests.exceptions.ConnectionError:
-        logger.error(f"Connection error occurred while requesting {DESTINATION_URL}")
+        logger.error(f"Connection error occurred while requesting {target_url}")
         return jsonify({'error': 'Could not connect to destination'}), 502
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error occurred while requesting {DESTINATION_URL}: {str(e)}")
+        logger.error(f"Error occurred while requesting {target_url}: {str(e)}")
         return jsonify({'error': 'An error occurred processing your request'}), 500
 
 if __name__ == '__main__':
