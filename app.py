@@ -62,7 +62,7 @@ def proxy(path):
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
 
-    if SECRET_KEY in request.url:
+    if SECRET_KEY in request.path:
         logger.info(f"Access granted with secret key: {request.url}")
         return "Access granted to your site through the proxy!"
 
@@ -103,4 +103,5 @@ def proxy(path):
 if __name__ == '__main__':
     logger.info("Starting proxy server")
     port = int(os.environ.get('PORT', 5001))
-    app.run(debug=os.environ.get('DEBUG', 'False').lower() == 'true', host='0.0.0.0', port=port)
+    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=port)
