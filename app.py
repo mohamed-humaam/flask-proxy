@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, Response
 import requests
 import os
 import logging
@@ -53,7 +53,7 @@ def setup_logger():
 
 logger = setup_logger()
 
-@app.route('/', defaults={'path': ''})
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
 def proxy(path):
@@ -67,6 +67,7 @@ def proxy(path):
     try:
         logger.info(f"Forwarding request to: {target_url}")
 
+        # Forward the request to the destination URL
         response = requests.request(
             method=request.method,
             url=target_url,
@@ -81,21 +82,19 @@ def proxy(path):
         logger.debug(f"Response headers: {dict(response.headers)}")
         logger.debug(f"Response content: {response.text}")
 
-        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        headers = [(name, value) for (name, value) in response.raw.headers.items()
-                   if name.lower() not in excluded_headers]
+        # Create a Flask Response object with the content from the destination
+        proxy_response = Response(response.content, response.status_code)
 
-        return Response(response.content, response.status_code, headers)
+        # Copy all headers from the original response
+        for header, value in response.headers.items():
+            if header.lower() not in ('content-encoding', 'transfer-encoding'):
+                proxy_response.headers[header] = value
 
-    except requests.exceptions.Timeout:
-        logger.error(f"Timeout occurred while requesting {target_url}")
-        return jsonify({'error': 'Request to destination timed out'}), 504
-    except requests.exceptions.ConnectionError:
-        logger.error(f"Connection error occurred while requesting {target_url}")
-        return jsonify({'error': 'Could not connect to destination'}), 502
+        return proxy_response
+
     except requests.exceptions.RequestException as e:
         logger.error(f"Error occurred while requesting {target_url}: {str(e)}")
-        return jsonify({'error': 'An error occurred processing your request', 'details': str(e)}), 500
+        return Response(str(e), status=500)
 
 if __name__ == '__main__':
     logger.info("Starting proxy server")
