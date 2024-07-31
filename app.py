@@ -23,11 +23,10 @@ RATE_LIMIT = os.environ.get('RATE_LIMIT', '10 per minute')
 
 # Set up rate limiter
 limiter = Limiter(
-    get_remote_address,
+    key_func=get_remote_address,
     app=app,
     default_limits=[RATE_LIMIT]
 )
-limiter.logger = logger
 
 def setup_logger():
     log_dir = 'logs'
