@@ -61,12 +61,10 @@ def proxy(path):
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
 
-    if SECRET_KEY in request.path:
-        logger.info(f"Access granted with secret key: {request.url}")
-        return "Access granted to your site through the proxy!"
+    # Always forward to DESTINATION_URL, regardless of the path
+    target_url = DESTINATION_URL
 
     try:
-        target_url = f"{DESTINATION_URL}/{path}"
         logger.info(f"Forwarding request to: {target_url}")
 
         response = requests.request(
