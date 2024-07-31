@@ -81,11 +81,11 @@ def proxy(path):
 
         logger.info(f"Received response from {target_url} with status {response.status_code}")
         logger.debug(f"Response headers: {dict(response.headers)}")
-        logger.debug(f"Response content: {response.text[:200]}...")  # Log first 200 characters
+        logger.debug(f"Response content: {response.text}")
 
         if response.status_code == 404:
             logger.warning(f"404 Not Found error from destination for path: {path}")
-            return jsonify({'error': 'Resource not found on the destination server'}), 404
+            return jsonify({'error': 'Resource not found on the destination server', 'details': response.text}), 404
 
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
         headers = [(name, value) for (name, value) in response.raw.headers.items()
@@ -101,7 +101,7 @@ def proxy(path):
         return jsonify({'error': 'Could not connect to destination'}), 502
     except requests.exceptions.RequestException as e:
         logger.error(f"Error occurred while requesting {target_url}: {str(e)}")
-        return jsonify({'error': 'An error occurred processing your request'}), 500
+        return jsonify({'error': 'An error occurred processing your request', 'details': str(e)}), 500
 
 if __name__ == '__main__':
     logger.info("Starting proxy server")
