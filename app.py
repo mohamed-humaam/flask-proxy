@@ -83,10 +83,6 @@ def proxy(path):
         logger.debug(f"Response headers: {dict(response.headers)}")
         logger.debug(f"Response content: {response.text}")
 
-        if response.status_code == 404:
-            logger.warning(f"404 Not Found error from destination for path: {path}")
-            return jsonify({'error': 'Resource not found on the destination server', 'details': response.text}), 404
-
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
         headers = [(name, value) for (name, value) in response.raw.headers.items()
                    if name.lower() not in excluded_headers]
