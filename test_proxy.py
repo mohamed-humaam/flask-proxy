@@ -1,7 +1,7 @@
 import requests
 import json
 
-PROXY_URL = "https://830c89d2-1d8c-4d08-ab5e-ce886d3bd24f.cinex.pro"  # Your proxy server address
+PROXY_URL = "http://216.183.223.205"  # Your proxy server address
 HEADERS = {'Content-Type': 'application/json'}
 
 def test_request(method, path, data=None):
@@ -26,7 +26,7 @@ def run_tests():
     test_request('DELETE', 'api/payment/checkout')
 
     # Test secret key access
-    test_request('GET', 'goruboe')
+    test_request('GET', 'WebHook')
 
     # Test non-existent path
     test_request('GET', 'non_existent_path')
