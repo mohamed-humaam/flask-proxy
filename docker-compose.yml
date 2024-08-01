@@ -6,7 +6,7 @@ services:
       - "5001:5001"
     environment:
       DESTINATION_URL: https://api.cinex.pro/api/payment/checkout
-      SECRET_KEY: goruboe
+      SECRET_KEY: WebHook
       RATE_LIMIT: 10 per minute
       DEBUG: 'False'
       PORT: 5001
