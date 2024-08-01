@@ -3,7 +3,7 @@ services:
   flask-proxy:
     build: .
     ports:
-      - "80:5001"
+      - "5001:5001"
     environment:
       DESTINATION_URL: https://api.cinex.pro/api/payment/checkout
       SECRET_KEY: WebHook
@@ -16,7 +16,7 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "80:80"
+      - "8080:80" # Change this line
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
