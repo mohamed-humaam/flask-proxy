@@ -20,6 +20,5 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - /path/to/your/certs:/etc/nginx/certs:ro
     depends_on:
       - flask-proxy
