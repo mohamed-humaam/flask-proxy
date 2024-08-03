@@ -6,7 +6,7 @@ services:
       - "3103:5000"
     environment:
       DESTINATION_URL: https://api.cinex.pro/api/payment/checkout
-      SECRET_KEY: WebHook
+      SECRET_KEY: ee24fa5e-b9eb-483c-bad0-44be4fac6046
       RATE_LIMIT: 10 per minute
       DEBUG: 'False'
       PORT: 5000
