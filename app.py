@@ -17,8 +17,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Get configuration from environment variables
-DESTINATION_URL = os.environ.get('DESTINATION_URL', 'https://api.cinex.pro/api/payment/checkout')
-SECRET_KEY = os.environ.get('SECRET_KEY', 'WebHook')
+DESTINATION_URL = os.environ.get('DESTINATION_URL', 'https://830c89d2-1d8c-4d08-ab5e-ce886d3bd24f.cinex.pro')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'web-hook')
 RATE_LIMIT = os.environ.get('RATE_LIMIT', '10 per minute')
 
 # Set up rate limiter
