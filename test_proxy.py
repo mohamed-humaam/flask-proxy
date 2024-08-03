@@ -26,7 +26,7 @@ def run_tests():
     test_request('DELETE', 'api/payment/checkout')
 
     # Test secret key access
-    test_request('GET', 'WebHook')
+    test_request('GET', 'web-hook')
 
     # Test non-existent path
     test_request('GET', 'non_existent_path')

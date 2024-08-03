@@ -5,7 +5,7 @@ services:
     ports:
       - "5001:5001"
     environment:
-      DESTINATION_URL: https://830c89d2-1d8c-4d08-ab5e-ce886d3bd24f.cinex.pro
+      DESTINATION_URL: https://api.cinex.pro/api/payment/checkout
       SECRET_KEY: web-hook
       RATE_LIMIT: 10 per minute
       DEBUG: 'False'
@@ -17,8 +17,9 @@ services:
     image: nginx:latest
     ports:
       - "443:443"
+      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - /path/to/your/ssl:/etc/nginx/ssl:ro
+      - /path/to/your/certs:/etc/nginx/certs:ro
     depends_on:
       - flask-proxy
