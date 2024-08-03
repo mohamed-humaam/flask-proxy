@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Get configuration from environment variables
 DESTINATION_URL = os.environ.get('DESTINATION_URL', 'https://api.cinex.pro/api/payment/checkout')
-SECRET_KEY = os.environ.get('SECRET_KEY', 'web-hook')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'WebHook')
 RATE_LIMIT = os.environ.get('RATE_LIMIT', '10 per minute')
 
 # Set up rate limiter
@@ -53,15 +53,16 @@ def setup_logger():
 
 logger = setup_logger()
 
-@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @limiter.limit(RATE_LIMIT)
 def proxy(path):
+    if path != SECRET_KEY:
+        return Response("Not Found", status=404)
+
     logger.info(f"Received request: {request.method} {request.url}")
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request body: {request.get_data().decode('utf-8')}")
 
-    # Always forward to DESTINATION_URL, regardless of the path
     target_url = DESTINATION_URL
 
     try:
@@ -98,6 +99,6 @@ def proxy(path):
 
 if __name__ == '__main__':
     logger.info("Starting proxy server")
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     app.run(debug=debug, host='0.0.0.0', port=port)
