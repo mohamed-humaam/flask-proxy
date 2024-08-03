@@ -3,7 +3,7 @@ services:
   flask-proxy:
     build: .
     ports:
-      - "80:5000"
+      - "5000:5000"
     environment:
       DESTINATION_URL: https://api.cinex.pro/api/payment/checkout
       SECRET_KEY: WebHook
